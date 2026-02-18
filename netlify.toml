@@ -1,0 +1,6 @@
+[functions]
+  directory = "netlify/functions"
+
+[[scheduled.functions]]
+  name = "email-diario"
+  schedule = "0 10 * * *"

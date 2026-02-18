@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chá de Revelação – Confirmação</title>
+
+<style>
+body{
+  margin:0;
+  background:#fdeaf2;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  font-family:Arial,sans-serif;
+}
+.convite{
+  position:relative;
+  max-width:420px;
+  width:100%;
+}
+.convite img{
+  width:100%;
+  border-radius:18px;
+}
+.btn-confirmar{
+  position:absolute;
+  bottom:18%;
+  left:50%;
+  transform:translateX(-50%);
+  background:linear-gradient(135deg,#90caf9,#f48fb1);
+  color:#fff;
+  border:none;
+  padding:14px 28px;
+  font-size:17px;
+  font-weight:bold;
+  border-radius:32px;
+  cursor:pointer;
+  box-shadow:0 6px 15px rgba(0,0,0,.35);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{
+  0%{transform:translateX(-50%) scale(1)}
+  50%{transform:translateX(-50%) scale(1.05)}
+  100%{transform:translateX(-50%) scale(1)}
+}
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  justify-content:center;
+  align-items:center;
+  z-index:10;
+}
+.modal-content{
+  background:#fff;
+  padding:24px;
+  border-radius:16px;
+  width:90%;
+  max-width:360px;
+  text-align:center;
+}
+input{
+  width:100%;
+  padding:12px;
+  margin:12px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:16px;
+}
+.acoes{
+  display:flex;
+  gap:10px;
+}
+.acoes button{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  font-size:15px;
+  cursor:pointer;
+}
+.sim{background:#81c784}
+.nao{background:#ef9a9a}
+.resultado{
+  margin-top:14px;
+  font-size:16px;
+}
+.lista{
+  margin-top:12px;
+  text-align:left;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="convite">
+  <img src="convite.jpg" alt="Convite Chá de Revelação">
+  <button class="btn-confirmar" onclick="abrir()">Confirmar Presença</button>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h2>Confirme sua presença 💕</h2>
+
+    <!-- NETLIFY FORM -->
+    <form name="confirmacao-cha" method="POST" data-netlify="true">
+      <input type="hidden" name="form-name" value="confirmacao-cha">
+      <input type="text" name="nome" id="nome" placeholder="Digite seu nome">
+
+      <div class="acoes">
+        <button type="submit" class="sim" onclick="confirmar(event)">Confirmar</button>
+        <button type="button" class="nao" onclick="recusar()">Não poderei ir</button>
+      </div>
+    </form>
+
+    <div class="resultado" id="resultado"></div>
+    <div class="lista" id="lista"></div>
+  </div>
+</div>
+
+<!-- Melodia fofa -->
+<audio id="musica" loop>
+  <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_2f79e1b7d7.mp3" type="audio/mpeg">
+</audio>
+
+<!-- EMAILJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+/* ===== CONFIGURE AQUI ===== */
+emailjs.init("SUA_PUBLIC_KEY");
+/* ========================= */
+
+const modal=document.getElementById('modal');
+const listaDiv=document.getElementById('lista');
+const musica=document.getElementById('musica');
+
+function abrir(){
+  modal.style.display='flex';
+}
+
+function confirmar(e){
+  e.preventDefault();
+  const nome=document.getElementById('nome').value.trim();
+  if(!nome) return alert('Digite seu nome 😊');
+
+  musica.volume=0.25;
+  musica.play();
+
+  let lista=JSON.parse(localStorage.getItem('presencas'))||[];
+  if(!lista.includes(nome)){
+    lista.push(nome);
+    lista.sort((a,b)=>a.localeCompare(b));
+    localStorage.setItem('presencas',JSON.stringify(lista));
+  }
+
+  document.getElementById('resultado').innerHTML=
+    `Obrigado, <b>${nome}</b>!<br>Presença confirmada 💚<br>🧸💙💖🧸`;
+
+  mostrarLista();
+  enviarEmail(lista);
+}
+
+function enviarEmail(lista){
+  emailjs.send(
+    "SEU_SERVICE_ID",
+    "SEU_TEMPLATE_ID",
+    {
+      lista: lista.join('\\n')
+    }
+  );
+}
+
+function recusar(){
+  const nome=document.getElementById('nome').value.trim();
+  if(!nome) return alert('Digite seu nome 😊');
+  document.getElementById('resultado').innerHTML=
+    `Tudo bem, <b>${nome}</b> 💔<br>Você marcou que não poderá comparecer.`;
+}
+
+function mostrarLista(){
+  let lista=JSON.parse(localStorage.getItem('presencas'))||[];
+  if(lista.length===0) return;
+  listaDiv.innerHTML='<b>Confirmados:</b><br>'+lista.join('<br>');
+}
+
+modal.onclick=e=>{if(e.target===modal)modal.style.display='none'}
+mostrarLista();
+</script>
+
+</body>
+</html>
